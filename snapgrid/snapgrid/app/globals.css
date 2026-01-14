@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Segment A Key Trial';
+  src: url('/fonts/SegmentAKeyTrial-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Segment A Key Trial';
+  src: url('/fonts/SegmentAKeyTrial-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Segment A Key Trial';
+  src: url('/fonts/SegmentAKeyTrial-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* TT Firs Neue local font */
+@font-face {
+  font-family: 'TT Firs Neue Trial Var Roman';
+  src: url('/fonts/TT Firs Neue Trial Var Roman.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DS-DIGI local font (loaded via CSS to avoid Turbopack next/font/local issues) */
+@font-face {
+  font-family: 'DS-DIGI';
+  src: url('/fonts/DS-DIGI.TTF') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.font-dsdigi {
+  font-family: 'DS-DIGI', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --font-segment-a: 'Segment A Key Trial', sans-serif;
+  --font-tt-firs: 'TT Firs Neue Trial Var Roman', sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
