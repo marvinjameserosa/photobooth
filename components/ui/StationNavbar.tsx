@@ -56,7 +56,7 @@ const StationNavbar: React.FC<StationNavbarProps> = ({ className = '' }) => {
     return (
         <>
             {/* Logo - Fixed Position */}
-            <Link href="/" className="fixed top-[26px] left-4 z-50 flex items-center gap-2">
+            <Link href="/" className="fixed top-[26px] left-4 z-50 flex items-center gap-2 md:hidden">
                 <Image
                     src="/logo.png"
                     alt="SnapGrid Logo"
