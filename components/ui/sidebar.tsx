@@ -28,7 +28,44 @@ interface SidebarProps {
 export default function Sidebar({
   stations = [],
   activeStationId = 1,
-}: Readonly<SidebarProps>) {
+  isOpen = false,
+  onClose,
+  onSelect,
+  isDesktop = false,
+  onToggle,
+  indicatorPalette,
+}: Readonly<{
+  stations?: StationItem[];
+  activeStationId?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
+  onSelect?: (id: number) => void;
+  isDesktop?: boolean;
+  onToggle?: () => void;
+  indicatorPalette?: string[];
+}>) {
+  const classes = [
+    'w-72',
+    'bg-[#0b0b0b]',
+    'border-r',
+    'border-gray-900',
+    'flex',
+    'flex-col',
+    'justify-between',
+    'p-6',
+    'transform',
+    'transition-transform',
+    'duration-300',
+    'ease-in-out',
+  ];
+
+  if (isDesktop) {
+    classes.push('translate-x-0', 'relative', 'md:static');
+  } else {
+    classes.push(isOpen ? 'translate-x-0' : '-translate-x-full', 'fixed', 'inset-y-0', 'left-0');
+  }
+
+  classes.push('z-30');
 
   // Find the index of the active station to determine what is "past" and "future"
   const activeIndex = stations.findIndex(s => s.id === activeStationId);
@@ -79,13 +116,20 @@ export default function Sidebar({
 
             {stations.map((st, index) => {
               const isActive = st.id === activeStationId;
-
-              // Logic: If current index is less than active index, it's completed (Teal).
-              // If it matches, it's active (Orange).
-              // Otherwise, it's future (Gray).
-              let statusColor = COLORS.FUTURE;
-              if (index < activeIndex) statusColor = COLORS.COMPLETED;
-              if (isActive) statusColor = COLORS.ACTIVE;
+              
+              // Determine status color based on palette or default colors
+              let statusColor: string;
+              if (indicatorPalette) {
+                // Use provided palette: index maps to palette array
+                statusColor = indicatorPalette[index] || COLORS.FUTURE;
+              } else {
+                // Default logic: If current index is less than active index, it's completed (Green).
+                // If it matches, it's active (Red).
+                // Otherwise, it's future (Yellow).
+                statusColor = COLORS.FUTURE;
+                if (index < activeIndex) statusColor = COLORS.COMPLETED;
+                if (isActive) statusColor = COLORS.ACTIVE;
+              }
 
               // Active dot is slightly larger and shifted left, others are standard
               const indicatorStyle: React.CSSProperties = {
