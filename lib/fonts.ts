@@ -1,5 +1,17 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Urbanist, Inter } from "next/font/google";
 import localFont from "next/font/local";
+
+export const urbanist = Urbanist({
+  subsets: ["latin"],
+  variable: "--font-urbanist",
+  display: "swap",
+});
+
+export const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const segmentA = localFont({
   src: "../public/fonts/SegmentAKeyTrial-Regular.otf",
@@ -43,7 +55,7 @@ export const geistMono = Geist_Mono({
 export const DSDIGI = localFont({
   src: [
     {
-      path: './DS-DIGI.ttf', 
+      path: './DS-DIGI.ttf',
       weight: '400',
       style: 'normal',
     },

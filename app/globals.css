@@ -33,7 +33,7 @@
   font-display: swap;
 }
 
-/* DS-DIGI local font (loaded via CSS to avoid Turbopack next/font/local issues) */
+/* DS-DIGI local font */
 @font-face {
   font-family: 'DS-DIGI';
   src: url('/fonts/DS-DIGI.TTF') format('truetype');
@@ -47,9 +47,32 @@
     "Courier New", monospace;
 }
 
+/* Arduino Day Philippines Color Scheme */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Background colors */
+  --background: #0d1b2a;
+  --bg-dark: #0d1b2a;
+  --bg-gradient-start: #0d2818;
+  --bg-gradient-end: #1a0f0a;
+  
+  /* Accent colors */
+  --accent-primary: #00CED1;
+  --accent-secondary: #FF6B35;
+  --accent-teal: #00CED1;
+  --accent-orange: #FF6B35;
+  
+  /* Text colors */
+  --foreground: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #a0aec0;
+  --text-muted: #6b7280;
+  
+  /* Component colors */
+  --card-bg: rgba(13, 27, 42, 0.8);
+  --card-border: rgba(0, 206, 209, 0.3);
+  --nav-bg: rgba(13, 27, 42, 0.9);
+  
+  /* Font variables */
   --font-segment-a: 'Segment A Key Trial', sans-serif;
   --font-tt-firs: 'TT Firs Neue Trial Var Roman', sans-serif;
 }
@@ -57,19 +80,143 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+  --font-urbanist: var(--font-urbanist);
+  --font-inter: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Main body styling with Arduino Day gradient */
+/* Main body styling with Arduino Day gradient */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-dark) 50%, var(--bg-gradient-end) 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, button, .btn {
+  font-family: var(--font-urbanist), sans-serif;
+}
+
+/* Bokeh effect styling */
+.bokeh-container {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.bokeh-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.6;
+  animation: float 20s ease-in-out infinite;
+}
+
+.bokeh-circle-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 165, 0, 0.5) 0%, transparent 70%);
+  top: 20%;
+  left: -5%;
+  animation-delay: 0s;
+}
+
+.bokeh-circle-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(255, 140, 0, 0.4) 0%, transparent 70%);
+  top: 60%;
+  left: 10%;
+  animation-delay: -5s;
+}
+
+.bokeh-circle-3 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.45) 0%, transparent 70%);
+  top: 10%;
+  right: -10%;
+  animation-delay: -10s;
+}
+
+.bokeh-circle-4 {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(255, 180, 100, 0.5) 0%, transparent 70%);
+  bottom: 20%;
+  right: 5%;
+  animation-delay: -15s;
+}
+
+.bokeh-circle-5 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(0, 206, 209, 0.3) 0%, transparent 70%);
+  top: 40%;
+  left: 50%;
+  animation-delay: -8s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(20px, 30px) scale(1.02);
+  }
+}
+
+/* Glassmorphism card effect */
+.glass-card {
+  background: rgba(13, 27, 42, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 206, 209, 0.2);
+  border-radius: 12px;
+}
+
+/* Teal glow effect */
+.teal-glow {
+  box-shadow: 0 0 30px rgba(0, 206, 209, 0.3);
+}
+
+/* Section label styling (like "ARDUINO DAY PHILIPPINES 2026") */
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--accent-primary);
+  border-radius: 2px;
+}
+
+button {
+  cursor: pointer;
 }

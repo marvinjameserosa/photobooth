@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { geistMono, geistSans, segmentA } from "@/lib/fonts";
+import { geistMono, geistSans, urbanist, inter } from "@/lib/fonts";
 
 export const metadata: Metadata = {
   title: "SnapGrid",
@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${segmentA.variable} antialiased`}
+        className={`${urbanist.variable} ${inter.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

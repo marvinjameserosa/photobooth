@@ -1,7 +1,10 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import Squares from '@/components/ui/bg-particles';
+import React from "react";
+import Image from "next/image";
+import BokehBackground from '@/components/ui/BokehBackground';
 import Sidebar from '@/components/ui/sidebar';
+import StationNavbar from '@/components/ui/StationNavbar';
+import StatusBottomBar from '@/components/ui/StatusBottomBar';
 import { useRouter } from 'next/navigation';
 
 type Station = {
@@ -10,7 +13,6 @@ type Station = {
   subtitle?: string;
 };
 
-// Values for the Grid Layout Cards
 const stations: Station[] = [
   { id: 1, title: "SUBWAY 1", subtitle: "4-Cut Train Car" },
   { id: 2, title: "SUBWAY 2", subtitle: "Subway Doors" },
@@ -18,7 +20,6 @@ const stations: Station[] = [
   { id: 4, title: "TRANSIT TERMINAL", subtitle: "Route Maps" },
 ];
 
-// Journey steps for Sidebar Navigation
 const journeySteps: Station[] = [
   { id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT" },
   { id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS" },
@@ -26,17 +27,16 @@ const journeySteps: Station[] = [
   { id: 4, title: "STATION 04", subtitle: "SHARE RESULTS" },
 ];
 
-// --- Sub Components ---
 
 function StationBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="relative inline-flex items-center justify-center px-10 py-3 text-xs font-semibold uppercase tracking-[0.4em] text-[#f2c200]">
-      <span className="absolute inset-0 border border-[#f2c200]/80" aria-hidden />
-      <span className="absolute -top-1 -left-1 h-3 w-3  bg-[#f2c200]" aria-hidden />
-      <span className="absolute -top-1 -right-1 h-3 w-3  bg-[#f2c200]" aria-hidden />
-      <span className="absolute -bottom-1 -left-1 h-3 w-3  bg-[#f2c200]" aria-hidden />
-      <span className="absolute -bottom-1 -right-1 h-3 w-3 bg-[#f2c200]" aria-hidden />
-      <span className="relative tracking-[0.4em]">{children}</span>
+    <span className="relative inline-flex items-center justify-center px-10 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#00CED1]">
+      <span className="absolute inset-0 border border-[#00CED1]/60 rounded-lg" aria-hidden />
+      <span className="absolute -top-1 -left-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
+      <span className="absolute -top-1 -right-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
+      <span className="absolute -bottom-1 -left-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
+      <span className="absolute -bottom-1 -right-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
+      <span className="relative tracking-[0.3em]">{children}</span>
     </span>
   );
 }
@@ -48,7 +48,7 @@ function Button({ children, onClick }: { children: React.ReactNode; onClick?: ()
         e.preventDefault();
         onClick?.();
       }}
-      className="text-xs border border-gray-600 text-gray-300 hover:bg-gray-800 px-4 py-2 w-full rounded transition"
+      className="text-xs border border-[#00CED1]/50 text-[#00CED1] hover:bg-[#00CED1]/10 hover:border-[#00CED1] px-4 py-2.5 w-full rounded-full transition-all duration-200"
     >
       {children}
     </button>
@@ -59,13 +59,53 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
   const renderIcon = (id: number) => {
     switch (id) {
       case 1:
-        return <img src="/icons/Grid%20(gray).png" alt="Grid icon" className="h-[80%] w-[80%] object-contain" />;
+        return (
+          <div className="relative w-[80%] h-[80%]">
+            <Image
+              src="/icons/Grid%20(gray).png"
+              alt="Grid icon"
+              fill
+              className="object-contain brightness-0 invert opacity-70"
+              sizes="(max-width: 640px) 56px, 80px"
+            />
+          </div>
+        );
       case 2:
-        return <img src="/icons/door-open.png" alt="Grid icon" className="h-[80%] w-[80%] object-contain" />;
+        return (
+          <div className="relative w-[80%] h-[80%]">
+            <Image
+              src="/icons/door-open.png"
+              alt="Grid icon"
+              fill
+              className="object-contain brightness-0 invert opacity-70"
+              sizes="(max-width: 640px) 56px, 80px"
+            />
+          </div>
+        );
       case 3:
-        return <img src="/icons/up-down.png" alt="Elevator icon" className="h-[80%] w-[80%] object-contain" />;
+        return (
+          <div className="relative w-[80%] h-[80%]">
+            <Image
+              src="/icons/up-down.png"
+              alt="Elevator icon"
+              fill
+              className="object-contain brightness-0 invert opacity-70"
+              sizes="(max-width: 640px) 56px, 80px"
+            />
+          </div>
+        );
       default:
-        return <img src="/icons/map%20(gray).png" alt="Map icon" className="h-[80%] w-[80%] object-contain" />;
+        return (
+          <div className="relative w-[80%] h-[80%]">
+            <Image
+              src="/icons/map%20(gray).png"
+              alt="Map icon"
+              fill
+              className="object-contain brightness-0 invert opacity-70"
+              sizes="(max-width: 640px) 56px, 80px"
+            />
+          </div>
+        );
     }
   };
 
@@ -75,7 +115,7 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
         return (
           <div className="grid grid-cols-2 gap-2 w-full">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-neutral-800 border border-neutral-700 rounded-sm" />
+              <div key={i} className="aspect-square bg-[rgba(0,206,209,0.1)] border border-[rgba(0,206,209,0.3)] rounded-md" />
             ))}
           </div>
         );
@@ -83,7 +123,7 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
         return (
           <div className="grid grid-cols-3 gap-2 w-full">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="aspect-square bg-neutral-800 border border-neutral-700 rounded-sm" />
+              <div key={i} className="aspect-square bg-[rgba(0,206,209,0.1)] border border-[rgba(0,206,209,0.3)] rounded-md" />
             ))}
           </div>
         );
@@ -91,7 +131,7 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
         return (
           <div className="flex flex-col gap-1 items-center w-full justify-center">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="w-full h-8 sm:h-9 bg-neutral-800 border border-neutral-700 rounded-sm" />
+              <div key={i} className="w-full h-8 sm:h-9 bg-[rgba(0,206,209,0.1)] border border-[rgba(0,206,209,0.3)] rounded-md" />
             ))}
           </div>
         );
@@ -99,7 +139,7 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
         return (
           <div className="grid grid-cols-2 gap-1 w-full mb-10">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className=" w-full h-12 sm:h-12  bg-neutral-800 border border-neutral-700 rounded-sm" />
+              <div key={i} className="w-full h-12 sm:h-12 bg-[rgba(0,206,209,0.1)] border border-[rgba(0,206,209,0.3)] rounded-md" />
             ))}
           </div>
         );
@@ -107,15 +147,15 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
   };
 
   return (
-    <article className="relative border border-gray-800 p-6 sm:p-8 rounded-md flex flex-col justify-between items-center text-center min-h-[420px] sm:min-h-[480px] md:min-h-[520px] bg-transparent transition-transform duration-300 ease-out hover:-translate-y-3 hover:shadow-[0_10px_30px_rgba(255,200,0,0.08)] hover:z-10">
-      <div className="absolute top-3 left-3 text-xs border border-gray-800 px-2 rounded bg-[#0b0b0b]">{String(station.id).padStart(2, "0")}</div>
-      <div className="absolute top-3 right-3 h-3 w-3 rounded-full bg-yellow-400" aria-hidden />
+    <article className="relative border border-[rgba(0,206,209,0.2)] p-6 sm:p-8 rounded-xl flex flex-col justify-between items-center text-center min-h-[420px] sm:min-h-[480px] md:min-h-[520px] bg-[rgba(13,27,42,0.6)] backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-2 hover:border-[#00CED1] hover:shadow-[0_10px_40px_rgba(0,206,209,0.15)] hover:z-10">
+      <div className="absolute top-3 left-3 text-xs border border-[rgba(0,206,209,0.4)] px-2 py-0.5 rounded-full bg-[rgba(13,27,42,0.8)] text-[#00CED1]">{String(station.id).padStart(2, "0")}</div>
+      <div className="absolute top-3 right-3 h-3 w-3 rounded-full bg-[#00CED1] shadow-[0_0_10px_rgba(0,206,209,0.5)]" aria-hidden />
 
       <div className="pt-4 mb-2 flex flex-col items-center">
-        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded bg-transparent flex items-center justify-center mb-4">
+        <div className="h-14 w-14 sm:h-20 sm:w-20 rounded-lg bg-[rgba(0,206,209,0.1)] flex items-center justify-center mb-4 border border-[rgba(0,206,209,0.2)]">
           {renderIcon(station.id)}
         </div>
-        <h3 className="text-lg sm:text-2xl text-gray-100 font-extrabold mb-1 uppercase tracking-wide">{station.title}</h3>
+        <h3 className="text-lg sm:text-2xl text-white font-extrabold mb-1 uppercase tracking-wide">{station.title}</h3>
         {station.subtitle && <p className="text-xs text-gray-400 mb-6">{station.subtitle}</p>}
       </div>
 
@@ -126,128 +166,62 @@ function StationCard({ station, onSelect }: { station: Station; onSelect?: (id: 
       </div>
 
       <div className="w-full mt-6">
-        <Button onClick={() => onSelect?.(station.id)}>— BOARD THIS TRAIN</Button>
+        <Button onClick={() => onSelect?.(station.id)}>SELECT LAYOUT</Button>
       </div>
     </article>
   );
 }
 
-// --- Main Page Component ---
-
 export default function GridLayout() {
   const router = useRouter();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState<boolean>(true);
-
-  // We default to 1 because this IS the Layout Selection page (Station 01)
-  const [activeStationId, setActiveStationId] = useState<number>(1);
-
-  useEffect(() => {
-    const shouldLockScroll = !isDesktop && isSidebarOpen;
-    document.body.style.overflow = shouldLockScroll ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isSidebarOpen, isDesktop]);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsSidebarOpen(false);
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, []);
-
-  useEffect(() => {
-    const checkWidth = () => {
-      const desktop = window.innerWidth >= 1000;
-      setIsDesktop(desktop);
-      if (desktop) setIsSidebarOpen(true);
-      else setIsSidebarOpen(false);
-    };
-    checkWidth();
-    window.addEventListener('resize', checkWidth);
-    return () => window.removeEventListener('resize', checkWidth);
-  }, []);
-
-  // Sidebar Nav Logic
-  const handleSidebarSelect = (id: number) => {
-    setActiveStationId(id); // mag rered
-    
-  };
 
   return (
-    <div className="min-h-screen flex bg-[#0a0a0a] text-gray-100">
-      {/* Mobile Menu Button */}
-      {!isDesktop && !isSidebarOpen && (
-        <button
-          aria-label="Open navigation"
-          onClick={() => setIsSidebarOpen(true)}
-          className="fixed top-4 left-4 z-40 p-2 rounded focus:outline-none"
-        >
-          <div className="w-8 h-8 flex flex-col items-center justify-center gap-1.5">
-            <span className="block w-6 h-0.5 bg-yellow-400" />
-            <span className="block w-6 h-0.5 bg-yellow-400" />
-            <span className="block w-6 h-0.5 bg-yellow-400" />
-          </div>
-        </button>
-      )}
-      
-      {/* Sidebar Component */}
+    <div className="min-h-screen flex text-gray-100">
+      {/* Bokeh Background */}
+      <BokehBackground />
+
+      {/* Navigation */}
+      <StationNavbar />
+
+      {/* Sidebar Component - Desktop Only */}
       <Sidebar
         stations={journeySteps}
-        activeStationId={activeStationId}
-        isOpen={isSidebarOpen}
-        isDesktop={isDesktop}
-        onClose={() => setIsSidebarOpen(false)}
-        onSelect={handleSidebarSelect}
-        onToggle={() => setIsSidebarOpen((v) => !v)}
+        activeStationId={1}
       />
 
       {/* Main Content */}
-      <main className="relative flex-1 p-12">
-        {/* Mobile Overlay */}
-        <div className={`${(!isDesktop && isSidebarOpen) ? 'block' : 'hidden'} fixed inset-0 bg-black/40 z-20`} onClick={() => setIsSidebarOpen(false)} />
-        
-        {/* Background Particles */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <Squares 
-            speed={0.5}
-            squareSize={48}
-            direction="diagonal"
-            borderColor={'rgba(255,255,255,0.04)'}
-            hoverFillColor={'rgba(255,255,255,0.02)'}
-          />
-        </div>
-
+      <main className="relative flex-1 p-6 md:p-12 pt-24">
         <div className="relative max-w-6xl mx-auto z-10">
           <div className="text-center mb-12">
             <StationBadge>STATION 01</StationBadge>
             <h1 className="mt-6 tracking-tight">
-              <span className="block text-6xl font-normal leading-none">SELECT YOUR</span>
-              <span className="block text-6xl font-extrabold leading-none text-yellow-400">STATION</span>
+              <span className="block text-4xl sm:text-5xl md:text-6xl font-normal leading-none text-white">SELECT YOUR</span>
+              <span className="block text-4xl sm:text-5xl md:text-6xl font-extrabold leading-none text-[#00CED1]">LAYOUT</span>
             </h1>
-            <p className="mt-3 text-gray-400">Choose your photobooth layout and prepare for departure</p>
-            <div className="flex items-center justify-center gap-3 mt-4 border-2 border-solid border-gray-400 w-40 p-2 m-auto">
-              <span className="h-3 w-3 rounded-full bg-green-500 inline-block" />
-              <span className="text-xs text-green-500">SYSTEM READY</span>
+            <p className="mt-4 text-gray-400 max-w-md mx-auto">Choose your photobooth layout and prepare for departure</p>
+            <div className="flex items-center justify-center gap-3 mt-6">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#00CED1] shadow-[0_0_10px_rgba(0,206,209,0.5)] inline-block" />
+              <span className="text-xs text-[#00CED1] uppercase tracking-widest">System Ready</span>
             </div>
-            <div className="mt-6 text-red-500 text-2xl">▾</div>
+            <div className="mt-6 text-[#00CED1] text-2xl animate-bounce">▾</div>
           </div>
 
-          <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {stations.map((s) => (
-              <StationCard 
-                key={s.id} 
-                station={s} 
+              <StationCard
+                key={s.id}
+                station={s}
                 onSelect={(id) => {
                   router.push(`/capture-photos?station=${id}`);
-                }} 
+                }}
               />
             ))}
           </section>
         </div>
       </main>
+
+      {/* Mobile Bottom Bar */}
+      <StatusBottomBar stations={journeySteps} activeStationId={1} />
     </div>
   );
 }
