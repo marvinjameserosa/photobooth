@@ -19,15 +19,23 @@ const COLORS = {
 interface SidebarProps {
   stations?: StationItem[];
   activeStationId?: number;
+  isOpen?: boolean;
+  isDesktop?: boolean;
+  onToggle?: () => void;
+  onClose?: () => void;
 }
 
 /**
- * Sidebar - Desktop-only status sidebar showing station progress
- * Hidden on mobile (use StatusBottomBar instead)
+ * Sidebar - Responsive status sidebar showing station progress
+ * Supports both desktop (always visible) and mobile (toggleable) modes
  */
 export default function Sidebar({
   stations = [],
   activeStationId = 1,
+  isOpen = true,
+  isDesktop = true,
+  onToggle,
+  onClose,
 }: Readonly<SidebarProps>) {
 
   // Find the index of the active station to determine what is "past" and "future"
@@ -35,16 +43,37 @@ export default function Sidebar({
 
   return (
     <aside
-      className="hidden lg:flex w-72 bg-[rgba(13,27,42,0.95)] backdrop-blur-xl border-r border-[rgba(0,206,209,0.2)] flex-col justify-between p-6"
+      className={`
+        ${isDesktop ? 'flex' : isOpen ? 'flex' : 'hidden'}
+        ${!isDesktop ? 'fixed inset-y-0 left-0 z-30 transform transition-transform duration-300' : ''}
+        ${!isDesktop && !isOpen ? '-translate-x-full' : 'translate-x-0'}
+        w-72 bg-[rgba(13,27,42,0.95)] backdrop-blur-xl border-r border-[rgba(0,206,209,0.2)] flex-col justify-between p-6
+      `}
       style={{ fontFamily: 'TT Firs Neue Trial Var Roman, sans-serif' }}
     >
       <div className="flex-1 flex flex-col">
         {/* Header Section */}
         <div className="mb-6">
-          <h2 className={`text-4xl font-extrabold tracking-tight text-white`}>
-            Snap<span className="text-[#00CED1]">Grid</span>
-          </h2>
-          <p className="text-xs text-gray-400 mt-1">Your photobooth journey</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className={`text-4xl font-extrabold tracking-tight text-white`}>
+                Snap<span className="text-[#00CED1]">Grid</span>
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">Your photobooth journey</p>
+            </div>
+            {/* Close button for mobile */}
+            {!isDesktop && onClose && (
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-white transition-colors p-2"
+                aria-label="Close sidebar"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
           <hr className="border-[rgba(0,206,209,0.3)] mt-4"></hr>
         </div>
 
