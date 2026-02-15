@@ -1,13 +1,5 @@
-import Hero from "@/components/sections/Hero";
-import LayoutsPreview from "@/components/sections/LayoutsPreview";
-import Navbar from "@/components/ui/Navbar";
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <main>
-      <Navbar />
-      <Hero />
-      <LayoutsPreview />
-    </main>
-  );
+  redirect('/grid-layout-selection');
 }

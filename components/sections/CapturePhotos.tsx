@@ -2,9 +2,7 @@
 import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import BokehBackground from '@/components/ui/BokehBackground';
-import Sidebar from '@/components/ui/sidebar';
-import StationNavbar from '@/components/ui/StationNavbar';
-import StatusBottomBar from '@/components/ui/StatusBottomBar';
+
 
 const LAYOUT_CONFIGS: Record<string, { size: number; columns: number; title: string }> = {
   '1': { size: 4, columns: 2, title: 'SUBWAY 1' },
@@ -13,18 +11,9 @@ const LAYOUT_CONFIGS: Record<string, { size: number; columns: number; title: str
   '4': { size: 6, columns: 2, title: 'TRANSIT' },
 };
 
-type Station = {
-  id: number;
-  title: string;
-  subtitle?: string;
-};
 
-const journeySteps: Station[] = [
-  { id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT" },
-  { id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS" },
-  { id: 3, title: "STATION 03", subtitle: "PHOTO GALLERY" },
-  { id: 4, title: "STATION 04", subtitle: "SHARE RESULTS" },
-];
+
+
 
 function StationBadge({ children }: { children: React.ReactNode }) {
   return (
@@ -85,14 +74,17 @@ function CameraCapture({
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Reduce resolution for storage efficiency
+      const scale = 0.8;
+      canvas.width = video.videoWidth * scale;
+      canvas.height = video.videoHeight * scale;
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Draw scaled
+        // Reduce JPEG quality to 0.7 for storage safety
+        const imageData = canvas.toDataURL('image/jpeg', 0.7);
         onCapture(imageData);
       }
     }
@@ -130,20 +122,29 @@ function CameraCapture({
     };
   }, [stopCamera]);
 
-  const startCountdown = () => {
-    setCountdown(3);
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev === null || prev <= 1) {
-          clearInterval(timer);
-          if (prev === 1) {
-            setTimeout(capturePhoto, 100);
-          }
-          return null;
-        }
-        return prev - 1;
-      });
+  const isCapturing = useRef(false);
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown === 0) {
+      if (!isCapturing.current) {
+        isCapturing.current = true;
+        capturePhoto();
+      }
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setCountdown((prev) => (prev !== null ? prev - 1 : null));
     }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdown, capturePhoto]);
+
+  const startCountdown = () => {
+    isCapturing.current = false;
+    setCountdown(3);
   };
 
   return (
@@ -195,7 +196,7 @@ function CameraCapture({
         </div>
 
         {/* Controls */}
-        <div className="flex items-center justify-center gap-4 p-6">
+        <div className="p-6 flex items-center justify-center gap-4 border-t border-[rgba(0,206,209,0.2)] bg-[rgba(13,27,42,0.5)]">
           <button
             onClick={startCountdown}
             disabled={!isStreaming || countdown !== null}
@@ -305,15 +306,41 @@ function CapturePhotosContent() {
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        const imageData = event.target?.result as string;
-        setPhotos(prev => {
-          const newPhotos = [...prev];
-          const emptyIndex = newPhotos.findIndex(p => p === null);
-          if (emptyIndex !== -1) {
-            newPhotos[emptyIndex] = imageData;
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          // Resize to max 1280 width/height while maintaining aspect ratio
+          const maxDim = 1280;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height && width > maxDim) {
+            height = (height * maxDim) / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width = (width * maxDim) / height;
+            height = maxDim;
           }
-          return newPhotos;
-        });
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            // Compress to JPEG 0.7
+            const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+
+            setPhotos(prev => {
+              const newPhotos = [...prev];
+              const emptyIndex = newPhotos.findIndex(p => p === null);
+              if (emptyIndex !== -1) {
+                newPhotos[emptyIndex] = compressedData;
+              }
+              return newPhotos;
+            });
+          }
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     });
@@ -350,12 +377,9 @@ function CapturePhotosContent() {
   return (
     <div className="min-h-screen flex text-gray-100">
       <BokehBackground />
-      <StationNavbar />
 
-      <Sidebar
-        stations={journeySteps}
-        activeStationId={2}
-      />
+
+
 
       <main className="relative flex-1 p-6 md:p-12 pt-24">
 
@@ -471,8 +495,7 @@ function CapturePhotosContent() {
         />
       )}
 
-      {/* Mobile Bottom Bar */}
-      <StatusBottomBar stations={journeySteps} activeStationId={2} />
+
     </div>
   );
 }
