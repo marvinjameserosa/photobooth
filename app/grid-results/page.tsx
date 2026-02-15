@@ -2,23 +2,11 @@
 
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { generateResultImage } from "@/utils/generateResultImage";
 import BokehBackground from "@/components/ui/BokehBackground";
-import Sidebar from "@/components/ui/sidebar";
-import StationNavbar from "@/components/ui/StationNavbar";
-import StatusBottomBar from "@/components/ui/StatusBottomBar";
 
-type Station = {
-	id: number;
-	title: string;
-	subtitle: string;
-};
 
-const journeySteps: Station[] = [
-	{ id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT" },
-	{ id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS" },
-	{ id: 3, title: "STATION 03", subtitle: "PHOTO GALLERY" },
-	{ id: 4, title: "STATION 04", subtitle: "SHARE RESULTS" },
-];
+
 
 type ResultsView = "photo-strip" | "gallery-view";
 
@@ -60,55 +48,7 @@ function PillButton({
 	);
 }
 
-function CircleShareButton({
-	label,
-	accent,
-}: {
-	label: string;
-	accent: "blue" | "orange" | "teal" | "neutral";
-}) {
-	const accentStyle =
-		accent === "blue"
-			? { border: "border-blue-500", text: "text-blue-500", bg: "bg-blue-500/10" }
-			: accent === "orange"
-				? { border: "border-[#FF6B35]", text: "text-[#FF6B35]", bg: "bg-[#FF6B35]/10" }
-				: accent === "teal"
-					? { border: "border-[#00CED1]", text: "text-[#00CED1]", bg: "bg-[#00CED1]/10" }
-					: { border: "border-neutral-600", text: "text-neutral-400", bg: "bg-neutral-800/50" };
 
-	return (
-		<button type="button" className="flex flex-col items-center group">
-			<span
-				className={
-					"h-20 w-20 rounded-full border-2 flex items-center justify-center text-base font-extrabold uppercase tracking-[0.12em] transition group-hover:scale-105 " +
-					accentStyle.border +
-					" " +
-					accentStyle.text +
-					" " +
-					accentStyle.bg
-				}
-			>
-				{label === "Facebook"
-					? "FB"
-					: label === "Instagram"
-						? "IG"
-						: label === "TikTok"
-							? "TK"
-							: label === "Twitter"
-								? "X"
-								: label.slice(0, 2)}
-			</span>
-			<span
-				className={
-					"mt-3 text-xs font-medium uppercase tracking-[0.15em] " +
-					accentStyle.text
-				}
-			>
-				{label}
-			</span>
-		</button>
-	);
-}
 
 function ResultsPreview({
 	view,
@@ -233,214 +173,66 @@ export default function GridResultsPage() {
 
 	const previewWidthClass = view === "gallery-view" ? "max-w-2xl" : "max-w-lg";
 
-	const handlePrint = () => {
+	const handlePrint = async () => {
 		if (typeof window === "undefined") return;
-		window.print();
+
+		try {
+			const dataUrl = await generateResultImage({
+				photos,
+				config,
+				theme: "default"
+			});
+
+			const printWindow = window.open('', '_blank');
+			if (printWindow) {
+				printWindow.document.write(`
+					<html>
+						<head>
+							<title>Print Photo</title>
+							<style>
+								@page { size: auto; margin: 0mm; }
+								body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+								img { max-width: 100%; max-height: 100vh; object-fit: contain; display: block; }
+								@media print {
+									body { -webkit-print-color-adjust: exact; }
+								}
+							</style>
+						</head>
+						<body>
+							<img src="${dataUrl}" onload="window.print(); window.close();" />
+						</body>
+					</html>
+				`);
+				printWindow.document.close();
+			}
+		} catch (err) {
+			console.error("Print generation error:", err);
+		}
 	};
 
 	const handleDownload = async () => {
-		if (!previewRef.current) return;
-
 		try {
-			const canvas = document.createElement('canvas');
-			const ctx = canvas.getContext('2d');
-			if (!ctx) return;
-
-			const size = config?.size || 4;
-			const columns = config?.columns || 2;
-			const rows = Math.ceil(size / columns);
-
-			// High resolution configuration
-			const cellSize = 600;
-			const gap = 32;
-			const paddingX = 80;
-			const headerHeight = 220;
-			const footerHeight = 140;
-			const contentHeight = (rows * cellSize) + ((rows - 1) * gap);
-
-			canvas.width = (columns * cellSize) + ((columns - 1) * gap) + (paddingX * 2);
-			canvas.height = headerHeight + contentHeight + footerHeight;
-
-			// 1. Background (White)
-			ctx.fillStyle = '#ffffff';
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-			// 2. Header Gradient (Light Teal to Transparent)
-			const headerGradient = ctx.createLinearGradient(0, 0, 0, headerHeight);
-			headerGradient.addColorStop(0, 'rgba(0, 206, 209, 0.1)');
-			headerGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-			ctx.fillStyle = headerGradient;
-			ctx.fillRect(0, 0, canvas.width, headerHeight);
-
-			// 3. Header Content
-			ctx.textAlign = 'center';
-
-			// "SNAPGRID"
-			ctx.fillStyle = '#0d1b2a';
-			ctx.font = '900 72px Arial, sans-serif';
-			ctx.fillText('SNAPGRID', canvas.width / 2, 80);
-
-			// Decoration Lines & Title
-			const title = (config?.title || "SUBWAY 1").toUpperCase();
-			ctx.font = 'bold 28px Arial, sans-serif';
-			// Calculate text width to position lines
-			const titleWidth = ctx.measureText(title).width;
-			const lineLength = 80;
-			const lineGap = 30;
-
-			// Middle vertical align for title line
-			const titleY = 135;
-
-			ctx.fillText(title, canvas.width / 2, titleY + 8); // optical adjustment
-
-			ctx.beginPath();
-			ctx.strokeStyle = '#00CED1';
-			ctx.lineWidth = 3;
-			// Left Line
-			ctx.moveTo(canvas.width / 2 - titleWidth / 2 - lineGap - lineLength, titleY);
-			ctx.lineTo(canvas.width / 2 - titleWidth / 2 - lineGap, titleY);
-			// Right Line
-			ctx.moveTo(canvas.width / 2 + titleWidth / 2 + lineGap, titleY);
-			ctx.lineTo(canvas.width / 2 + titleWidth / 2 + lineGap + lineLength, titleY);
-			ctx.stroke();
-
-			// Date
-			const now = new Date();
-			const dateStr = new Intl.DateTimeFormat("en-US", {
-				weekday: "long",
-				year: "numeric",
-				month: "long",
-				day: "numeric",
-			}).format(now);
-
-			ctx.fillStyle = '#525252';
-			ctx.font = '20px Arial, sans-serif';
-			ctx.fillText(dateStr, canvas.width / 2, 180);
-
-			// Gradient Line Separator
-			const separatorY = 210;
-			const lineGradient = ctx.createLinearGradient(paddingX, 0, canvas.width - paddingX, 0);
-			lineGradient.addColorStop(0, '#00CED1');
-			lineGradient.addColorStop(1, '#FF6B35');
-
-			ctx.fillStyle = lineGradient;
-			ctx.fillRect(paddingX, separatorY, canvas.width - (paddingX * 2), 6);
-
-
-			// 4. Photo Grid
-			const gridStartY = headerHeight + 20;
-
-			for (let i = 0; i < size; i++) {
-				const col = i % columns;
-				const row = Math.floor(i / columns);
-				const x = paddingX + col * (cellSize + gap);
-				const y = gridStartY + row * (cellSize + gap);
-
-				// Slot Background
-				ctx.fillStyle = '#0d1b2a';
-				ctx.fillRect(x, y, cellSize, cellSize);
-
-				if (photos[i]) {
-					const img = new window.Image();
-					img.crossOrigin = 'anonymous';
-					img.src = photos[i]!;
-					await new Promise((resolve) => {
-						img.onload = resolve;
-						img.onerror = resolve;
-					});
-
-					// Draw Image (Cover fit)
-					// Assuming photos are roughly square or we want to stretch/crop. 
-					// Simple drawImage fits to rect.
-					ctx.drawImage(img, x, y, cellSize, cellSize);
-				} else {
-					// Empty Slot
-					ctx.fillStyle = 'rgba(0,206,209,0.1)';
-					ctx.fillRect(x, y, cellSize, cellSize);
-
-					ctx.fillStyle = '#ffffff';
-					ctx.font = 'bold 24px Arial, sans-serif';
-					ctx.fillText(`SLOT ${String(i + 1).padStart(2, "0")} EMPTY`, x + cellSize / 2, y + cellSize / 2);
-				}
-
-				// Inner Border Overlay (to match CSS border)
-				// CSS was border-4 border-teal/30. Scaling up 2x -> 8px
-				ctx.strokeStyle = 'rgba(0,206,209,0.3)';
-				ctx.lineWidth = 12;
-				ctx.strokeRect(x, y, cellSize, cellSize);
-
-				// Number Badge
-				const badgeSize = 50;
-				const badgeMargin = 16;
-				const badgeX = x + cellSize - badgeSize - badgeMargin;
-				const badgeY = y + cellSize - badgeSize - badgeMargin;
-
-				// Badge BG
-				ctx.fillStyle = '#00CED1';
-				ctx.fillRect(badgeX, badgeY, badgeSize, badgeSize);
-
-				// Badge Border
-				ctx.strokeStyle = 'rgba(13,27,42,0.8)';
-				ctx.lineWidth = 3;
-				ctx.strokeRect(badgeX, badgeY, badgeSize, badgeSize);
-
-				// Badge Text
-				ctx.fillStyle = '#0d1b2a';
-				ctx.font = 'bold 24px Arial, sans-serif';
-				ctx.textAlign = 'center';
-				ctx.fillText((i + 1).toString(), badgeX + badgeSize / 2, badgeY + badgeSize / 2 + 9);
-			}
-
-			// 5. Footer
-			const footerStartY = gridStartY + contentHeight + 40;
-
-			// Footer Line
-			ctx.fillStyle = lineGradient;
-			ctx.fillRect(paddingX, footerStartY, canvas.width - (paddingX * 2), 6);
-
-			// Footer Text
-			ctx.textAlign = 'center';
-
-			ctx.fillStyle = '#0d1b2a';
-			ctx.font = 'bold 32px Arial, sans-serif'; // tracking-widest simulated by font choice/spacing? keeping simple
-			ctx.fillText('SNAPGRID.STATION', canvas.width / 2, footerStartY + 60);
-
-			ctx.fillStyle = '#737373';
-			ctx.font = '18px Arial, sans-serif';
-			ctx.fillText('DIGITAL PHOTOBOOTH EXPERIENCE', canvas.width / 2, footerStartY + 100);
+			const dataUrl = await generateResultImage({
+				photos,
+				config,
+				theme: "default"
+			});
 
 			const link = document.createElement('a');
-			link.download = `snapgrid-${Date.now()}.png`;
-			link.href = canvas.toDataURL('image/png');
+			link.download = `snapgrid-results-${Date.now()}.png`;
+			link.href = dataUrl;
 			link.click();
 		} catch (err) {
 			console.error('Download error:', err);
 		}
 	};
 
-	const handleShare = async () => {
-		if (typeof window === "undefined") return;
-		const url = window.location.href;
-		try {
-			if (navigator.share) {
-				await navigator.share({ title: "SnapGrid Results", url });
-				return;
-			}
-			await navigator.clipboard.writeText(url);
-			alert('Link copied to clipboard!');
-		} catch {
-		}
-	};
-
 	return (
 		<div className="min-h-screen flex text-gray-100">
 			<BokehBackground />
-			<StationNavbar />
 
-			<Sidebar
-				stations={journeySteps}
-				activeStationId={4}
-			/>
+
+
 
 			<main className="relative flex-1 px-6 py-10 pt-24 sm:px-10 lg:px-16 overflow-hidden">
 				<div className="relative z-10 max-w-6xl mx-auto">
@@ -483,39 +275,29 @@ export default function GridResultsPage() {
 					</div>
 
 					<section className="mt-12">
-						<div className={`mx-auto w-full ${previewWidthClass}`}>
+						<div id="print-area" className={`mx-auto w-full ${previewWidthClass}`}>
 							<ResultsPreview view={view} photos={photos} config={config} previewRef={previewRef} />
 						</div>
 					</section>
 
 					<div className={`mt-10 mx-auto w-full ${previewWidthClass}`}>
-						<div className="flex flex-col gap-4 sm:flex-row sm:gap-4">
+						<div className="flex flex-row gap-3 sm:gap-4">
 							<button
 								type="button"
-								className="flex h-14 w-full flex-1 items-center justify-center gap-3 bg-[#00CED1] px-8 text-xs font-semibold uppercase tracking-[0.2em] text-white rounded-full shadow-[0_20px_45px_rgba(0,206,209,0.25)] transition hover:bg-[#00b8ba]"
+								className="flex h-16 w-full flex-1 items-center justify-center gap-2 bg-[#00CED1] px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white rounded-full shadow-[0_20px_45px_rgba(0,206,209,0.25)] transition hover:bg-[#00b8ba]"
 								onClick={handleDownload}
 							>
-								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
 								</svg>
 								Download
 							</button>
 							<button
 								type="button"
-								className="flex h-14 w-full flex-1 items-center justify-center gap-3 bg-[#FF6B35] px-8 text-xs font-semibold uppercase tracking-[0.2em] text-white rounded-full shadow-[0_20px_45px_rgba(255,107,53,0.25)] transition hover:bg-[#e55a2b]"
-								onClick={handleShare}
-							>
-								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-								</svg>
-								Share
-							</button>
-							<button
-								type="button"
-								className="flex h-14 w-full flex-1 items-center justify-center gap-3 bg-[rgba(13,27,42,0.8)] border border-[rgba(0,206,209,0.3)] px-8 text-xs font-semibold uppercase tracking-[0.2em] text-white rounded-full transition hover:border-[#00CED1]"
+								className="flex h-16 w-full flex-1 items-center justify-center gap-2 bg-[rgba(13,27,42,0.8)] border border-[rgba(0,206,209,0.3)] px-4 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-white rounded-full transition hover:border-[#00CED1]"
 								onClick={handlePrint}
 							>
-								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
 								</svg>
 								Print
@@ -523,34 +305,7 @@ export default function GridResultsPage() {
 						</div>
 					</div>
 
-					<section className="mt-14">
-						<div className="mx-auto max-w-3xl bg-[rgba(13,27,42,0.7)] border border-[rgba(0,206,209,0.2)] px-6 py-10 rounded-xl backdrop-blur-sm shadow-[0_40px_90px_rgba(0,0,0,0.55)]">
-							<div className="text-center">
-								<div className="text-2xl sm:text-3xl font-bold uppercase tracking-tight text-[#00CED1]">
-									Share on Social
-								</div>
-								<div className="mt-2 text-sm font-medium uppercase tracking-wide text-gray-400">
-									Choose your platform
-								</div>
-							</div>
 
-							<div className="mt-10 flex flex-wrap items-center justify-center gap-8">
-								<CircleShareButton label="Facebook" accent="blue" />
-								<CircleShareButton label="Instagram" accent="orange" />
-								<CircleShareButton label="Twitter" accent="teal" />
-								<CircleShareButton label="TikTok" accent="neutral" />
-							</div>
-
-							<div className="mt-10 flex items-center justify-center">
-								<div className="inline-flex items-center justify-center gap-4 border border-[rgba(0,206,209,0.3)] bg-[rgba(13,27,42,0.5)] px-8 py-3 rounded-full">
-									<span className="h-2.5 w-2.5 rounded-full bg-[#00CED1] shadow-[0_0_8px_rgba(0,206,209,0.6)]" />
-									<span className="text-xs font-semibold uppercase tracking-[0.25em] text-gray-400">
-										All Platforms Ready
-									</span>
-								</div>
-							</div>
-						</div>
-					</section>
 
 					<div className="mt-12 flex items-center justify-center">
 						<button
@@ -572,7 +327,7 @@ export default function GridResultsPage() {
 			</main>
 
 			{/* Mobile Bottom Bar */}
-			<StatusBottomBar stations={journeySteps} activeStationId={4} />
+
 		</div>
 	);
 }
