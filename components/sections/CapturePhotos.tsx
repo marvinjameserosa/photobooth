@@ -1,35 +1,51 @@
 "use client";
-import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
-import { useSearchParams, useRouter } from 'next/navigation';
-import BokehBackground from '@/components/ui/BokehBackground';
-import Sidebar from '@/components/ui/sidebar';
-import StationNavbar from '@/components/ui/StationNavbar';
-import StatusBottomBar from '@/components/ui/StatusBottomBar';
-import ARCanvas from '@/components/ar/ARCanvas';
-import { useFaceMesh } from '@/lib/ar/hooks/useFaceMesh';
-import { useARState } from '@/lib/ar/hooks/useARState';
-import { AR_PROPS } from '@/public/ar-props';
-import { renderDebugLandmarks } from '@/public/ar-props/debug/faceLandmarks';
+import React, {
+  useState,
+  useEffect,
+  Suspense,
+  useRef,
+  useCallback,
+} from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import BokehBackground from "@/components/ui/BokehBackground";
+import ARCanvas from "@/components/ar/ARCanvas";
+import { useFaceMesh } from "@/lib/ar/hooks/useFaceMesh";
+import { useARState } from "@/lib/ar/hooks/useARState";
+import { AR_PROPS } from "@/public/ar-props";
 
-const LAYOUT_CONFIGS: Record<string, { size: number; columns: number; title: string }> = {
-  '1': { size: 4, columns: 2, title: 'SUBWAY 1' },
-  '2': { size: 6, columns: 3, title: 'SUBWAY 2' },
-  '3': { size: 4, columns: 1, title: 'ELEVATOR' },
-  '4': { size: 6, columns: 2, title: 'TRANSIT' },
+const LAYOUT_CONFIGS: Record<
+  string,
+  { size: number; columns: number; title: string }
+> = {
+  "1": { size: 4, columns: 2, title: "SUBWAY 1" },
+  "2": { size: 6, columns: 3, title: "SUBWAY 2" },
+  "3": { size: 4, columns: 1, title: "ELEVATOR" },
+  "4": { size: 6, columns: 2, title: "TRANSIT" },
 };
-
-
-
-
 
 function StationBadge({ children }: { children: React.ReactNode }) {
   return (
     <span className="relative inline-flex items-center justify-center px-10 py-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#00CED1]">
-      <span className="absolute inset-0 border border-[#00CED1]/60 rounded-lg" aria-hidden />
-      <span className="absolute -top-1 -left-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
-      <span className="absolute -top-1 -right-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
-      <span className="absolute -bottom-1 -left-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
-      <span className="absolute -bottom-1 -right-1 h-3 w-3 bg-[#00CED1] rounded-sm" aria-hidden />
+      <span
+        className="absolute inset-0 border border-[#00CED1]/60 rounded-lg"
+        aria-hidden
+      />
+      <span
+        className="absolute -top-1 -left-1 h-3 w-3 bg-[#00CED1] rounded-sm"
+        aria-hidden
+      />
+      <span
+        className="absolute -top-1 -right-1 h-3 w-3 bg-[#00CED1] rounded-sm"
+        aria-hidden
+      />
+      <span
+        className="absolute -bottom-1 -left-1 h-3 w-3 bg-[#00CED1] rounded-sm"
+        aria-hidden
+      />
+      <span
+        className="absolute -bottom-1 -right-1 h-3 w-3 bg-[#00CED1] rounded-sm"
+        aria-hidden
+      />
       <span className="relative tracking-[0.3em]">{children}</span>
     </span>
   );
@@ -37,7 +53,7 @@ function StationBadge({ children }: { children: React.ReactNode }) {
 
 function CameraCapture({
   onCapture,
-  onClose
+  onClose,
 }: {
   onCapture: (imageData: string) => void;
   onClose: () => void;
@@ -65,7 +81,7 @@ function CameraCapture({
   // Face Detection
   const { predictions, isLoading, faceDetected } = useFaceMesh(
     videoRef.current,
-    isAREnabled
+    isAREnabled,
   );
 
   // Update AR state
@@ -82,22 +98,26 @@ function CameraCapture({
   const retryCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+        audio: false,
       });
       if (videoRef.current) {
         streamRef.current = stream;
         videoRef.current.srcObject = stream;
       }
     } catch (err) {
-      setError('Unable to access camera. Please allow camera permissions.');
-      console.error('Camera error:', err);
+      setError("Unable to access camera. Please allow camera permissions.");
+      console.error("Camera error:", err);
     }
   }, []);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
   }, []);
@@ -110,7 +130,7 @@ function CameraCapture({
       const scale = 0.8;
       canvas.width = video.videoWidth * scale;
       canvas.height = video.videoHeight * scale;
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext("2d");
       if (ctx) {
         // Flip horizontally
         ctx.translate(canvas.width, 0);
@@ -118,9 +138,14 @@ function CameraCapture({
         ctx.drawImage(video, 0, 0);
 
         // Draw AR props if enabled
-        if (isAREnabled && selectedProp && predictions.length > 0 && arCanvasRef.current) {
+        if (
+          isAREnabled &&
+          selectedProp &&
+          predictions.length > 0 &&
+          arCanvasRef.current
+        ) {
           const arCanvas = arCanvasRef.current;
-          const arCtx = arCanvas.getContext('2d');
+          const arCtx = arCanvas.getContext("2d");
           if (arCtx) {
             // Reset transform for AR overlay
             ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -130,7 +155,7 @@ function CameraCapture({
           }
         }
 
-        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        const imageData = canvas.toDataURL("image/jpeg", 0.9);
         onCapture(imageData);
       }
     }
@@ -142,20 +167,24 @@ function CameraCapture({
     const initCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false
+          video: {
+            facingMode: "user",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
         });
 
         if (mounted && videoRef.current) {
           streamRef.current = stream;
           videoRef.current.srcObject = stream;
         } else {
-          stream.getTracks().forEach(track => track.stop());
+          stream.getTracks().forEach((track) => track.stop());
         }
       } catch (err) {
         if (mounted) {
-          setError('Unable to access camera. Please allow camera permissions.');
-          console.error('Camera error:', err);
+          setError("Unable to access camera. Please allow camera permissions.");
+          console.error("Camera error:", err);
         }
       }
     };
@@ -200,7 +229,10 @@ function CameraCapture({
         <div className="flex items-center justify-between p-4 border-b border-[rgba(0,206,209,0.2)]">
           <h3 className="text-lg font-semibold text-white">Camera Capture</h3>
           <button
-            onClick={() => { stopCamera(); onClose(); }}
+            onClick={() => {
+              stopCamera();
+              onClose();
+            }}
             className="w-8 h-8 flex items-center justify-center rounded-full bg-[rgba(255,107,53,0.2)] text-[#FF6B35] hover:bg-[rgba(255,107,53,0.3)] transition"
           >
             ✕
@@ -230,7 +262,7 @@ function CameraCapture({
                 muted
                 onLoadedMetadata={handleVideoReady}
                 className="w-full h-full object-cover"
-                style={{ transform: 'scaleX(-1)' }}
+                style={{ transform: "scaleX(-1)" }}
               />
 
               {/* AR Canvas Overlay */}
@@ -270,13 +302,14 @@ function CameraCapture({
                 </div>
               )}
 
-
               {/* AR Menu Dropdown - Repositioned to bottom right of video */}
               {showARMenu && (
                 <div className="absolute bottom-4 right-4 z-20 w-64 bg-[rgba(13,27,42,0.98)] border border-[rgba(0,206,209,0.3)] rounded-lg p-3 shadow-xl backdrop-blur-xl">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-3 pb-3 border-b border-[rgba(0,206,209,0.2)]">
-                    <span className="text-xs font-semibold text-white uppercase">AR Effects</span>
+                    <span className="text-xs font-semibold text-white uppercase">
+                      AR Effects
+                    </span>
                     <button
                       onClick={() => setShowARMenu(false)}
                       className="text-xs text-gray-400 hover:text-white"
@@ -294,17 +327,18 @@ function CameraCapture({
                         setAREnabled(false); // Explicitly disable AR when None is selected
                         setShowARMenu(false); // Optional: auto-close
                       }}
-                      className={`aspect-square rounded border-2 transition flex items-center justify-center text-lg ${!selectedProp
-                        ? 'border-[#FF6B35] bg-[rgba(255,107,53,0.1)]'
-                        : 'border-[rgba(0,206,209,0.3)] hover:border-[#00CED1]'
-                        }`}
+                      className={`aspect-square rounded border-2 transition flex items-center justify-center text-lg ${
+                        !selectedProp
+                          ? "border-[#FF6B35] bg-[rgba(255,107,53,0.1)]"
+                          : "border-[rgba(0,206,209,0.3)] hover:border-[#00CED1]"
+                      }`}
                       title="No Effect"
                     >
                       🚫
                     </button>
 
                     {/* Props */}
-                    {AR_PROPS.map(prop => (
+                    {AR_PROPS.map((prop) => (
                       <button
                         key={prop.id}
                         onClick={() => {
@@ -312,20 +346,35 @@ function CameraCapture({
                           setAREnabled(true); // Auto-enable AR
                           // setShowARMenu(false); // Keep open to let user try different ones
                         }}
-                        className={`aspect-square rounded border-2 transition flex items-center justify-center text-lg ${selectedProp?.id === prop.id
-                          ? 'border-[#FF6B35] bg-[rgba(255,107,53,0.1)]'
-                          : 'border-[rgba(0,206,209,0.3)] hover:border-[#00CED1]'
-                          }`}
+                        className={`aspect-square rounded border-2 transition flex items-center justify-center text-lg ${
+                          selectedProp?.id === prop.id
+                            ? "border-[#FF6B35] bg-[rgba(255,107,53,0.1)]"
+                            : "border-[rgba(0,206,209,0.3)] hover:border-[#00CED1]"
+                        }`}
                         title={prop.name}
                       >
-                        {prop.category === 'sunglasses' && '🕶️'}
-                        {prop.category === 'hats' && prop.id === 'robot-helmet' && '🤖'}
-                        {prop.category === 'hats' && prop.id !== 'robot-helmet' && '🧢'}
-                        {prop.category === 'components' && prop.id.includes('resistor') && '🔌'}
-                        {prop.category === 'components' && prop.id.includes('servo') && '⚙️'}
-                        {prop.category === 'effects' && prop.id.includes('binary') && '🔢'}
-                        {prop.category === 'effects' && prop.id.includes('cloud') && '☁️'}
-                        {prop.category === 'effects' && prop.id.includes('debug') && '✨'}
+                        {prop.category === "sunglasses" && "🕶️"}
+                        {prop.category === "hats" &&
+                          prop.id === "robot-helmet" &&
+                          "🤖"}
+                        {prop.category === "hats" &&
+                          prop.id !== "robot-helmet" &&
+                          "🧢"}
+                        {prop.category === "components" &&
+                          prop.id.includes("resistor") &&
+                          "🔌"}
+                        {prop.category === "components" &&
+                          prop.id.includes("servo") &&
+                          "⚙️"}
+                        {prop.category === "effects" &&
+                          prop.id.includes("binary") &&
+                          "🔢"}
+                        {prop.category === "effects" &&
+                          prop.id.includes("cloud") &&
+                          "☁️"}
+                        {prop.category === "effects" &&
+                          prop.id.includes("debug") &&
+                          "✨"}
                       </button>
                     ))}
                   </div>
@@ -334,7 +383,9 @@ function CameraCapture({
 
               {countdown !== null && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                  <span className="text-9xl font-bold text-[#00CED1] animate-pulse">{countdown}</span>
+                  <span className="text-9xl font-bold text-[#00CED1] animate-pulse">
+                    {countdown}
+                  </span>
                 </div>
               )}
             </>
@@ -348,7 +399,7 @@ function CameraCapture({
             disabled={!isStreaming || countdown !== null}
             className="px-8 py-3 bg-[#00CED1] text-white rounded-full font-medium hover:bg-[#00b8ba] transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,206,209,0.3)]"
           >
-            {countdown !== null ? 'Taking Photo...' : 'Take Photo (3s timer)'}
+            {countdown !== null ? "Taking Photo..." : "Take Photo (3s timer)"}
           </button>
 
           <button
@@ -363,13 +414,24 @@ function CameraCapture({
           <button
             onClick={() => setShowARMenu(!showARMenu)}
             disabled={!isStreaming}
-            className={`px-6 py-3 rounded-full font-medium transition flex items-center gap-2 ${showARMenu || (isAREnabled && selectedProp)
-              ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]'
-              : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
-              }`}
+            className={`px-6 py-3 rounded-full font-medium transition flex items-center gap-2 ${
+              showARMenu || (isAREnabled && selectedProp)
+                ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]"
+                : "bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]"
+            }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
+              />
             </svg>
             Effects
           </button>
@@ -386,7 +448,7 @@ function PhotoGrid({
   size,
   columns,
   onSelect,
-  onRemove
+  onRemove,
 }: {
   photos: (string | null)[];
   size: number;
@@ -414,7 +476,10 @@ function PhotoGrid({
                 className="w-full h-full object-cover"
               />
               <button
-                onClick={(e) => { e.stopPropagation(); onRemove(index); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(index);
+                }}
                 className="absolute top-2 right-2 w-6 h-6 bg-[#FF6B35] text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
               >
                 ✕
@@ -423,7 +488,9 @@ function PhotoGrid({
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
               <span className="text-2xl mb-1">+</span>
-              <span className="text-xs uppercase tracking-wider">Slot {index + 1}</span>
+              <span className="text-xs uppercase tracking-wider">
+                Slot {index + 1}
+              </span>
             </div>
           )}
           <span className="absolute bottom-2 right-2 bg-[rgba(0,206,209,0.8)] text-white text-xs px-2 py-0.5 rounded">
@@ -439,21 +506,21 @@ function CapturePhotosContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const currentStationId = searchParams.get('station') || '1';
-  const activeConfig = LAYOUT_CONFIGS[currentStationId] || LAYOUT_CONFIGS['1'];
+  const currentStationId = searchParams.get("station") || "1";
+  const activeConfig = LAYOUT_CONFIGS[currentStationId] || LAYOUT_CONFIGS["1"];
 
   const [showCamera, setShowCamera] = useState(false);
   const [photos, setPhotos] = useState<(string | null)[]>(() =>
-    Array(activeConfig.size).fill(null)
+    Array(activeConfig.size).fill(null),
   );
   const [selectedSlot, setSelectedSlot] = useState<number>(0);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCameraCapture = (imageData: string) => {
-    setPhotos(prev => {
+    setPhotos((prev) => {
       const newPhotos = [...prev];
-      const emptyIndex = newPhotos.findIndex(p => p === null);
+      const emptyIndex = newPhotos.findIndex((p) => p === null);
       const targetIndex = emptyIndex !== -1 ? emptyIndex : selectedSlot;
       newPhotos[targetIndex] = imageData;
       return newPhotos;
@@ -470,7 +537,7 @@ function CapturePhotosContent() {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          const canvas = document.createElement('canvas');
+          const canvas = document.createElement("canvas");
           // Resize to max 1280 width/height while maintaining aspect ratio
           const maxDim = 1280;
           let width = img.width;
@@ -486,15 +553,15 @@ function CapturePhotosContent() {
 
           canvas.width = width;
           canvas.height = height;
-          const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.drawImage(img, 0, 0, width, height);
             // Compress to JPEG 0.7
-            const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+            const compressedData = canvas.toDataURL("image/jpeg", 0.7);
 
-            setPhotos(prev => {
+            setPhotos((prev) => {
               const newPhotos = [...prev];
-              const emptyIndex = newPhotos.findIndex(p => p === null);
+              const emptyIndex = newPhotos.findIndex((p) => p === null);
               if (emptyIndex !== -1) {
                 newPhotos[emptyIndex] = compressedData;
               }
@@ -508,7 +575,7 @@ function CapturePhotosContent() {
     });
 
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -520,37 +587,37 @@ function CapturePhotosContent() {
   };
 
   const handleRemovePhoto = (index: number) => {
-    setPhotos(prev => {
+    setPhotos((prev) => {
       const newPhotos = [...prev];
       newPhotos[index] = null;
       return newPhotos;
     });
   };
 
-  const capturedCount = photos.filter(p => p !== null).length;
+  const capturedCount = photos.filter((p) => p !== null).length;
   const isComplete = capturedCount === activeConfig.size;
 
   const handleProceed = () => {
-    sessionStorage.setItem('photobooth_photos', JSON.stringify(photos));
-    sessionStorage.setItem('photobooth_config', JSON.stringify(activeConfig));
-    router.push('/grid-gallery-selection');
+    sessionStorage.setItem("photobooth_photos", JSON.stringify(photos));
+    sessionStorage.setItem("photobooth_config", JSON.stringify(activeConfig));
+    router.push("/grid-gallery-selection");
   };
 
   return (
     <div className="min-h-screen flex text-gray-100">
       <BokehBackground />
 
-
-
-
       <main className="relative flex-1 p-6 md:p-12 pt-24">
-
         <div className="relative max-w-6xl mx-auto z-10">
           <div className="text-center mb-8">
             <StationBadge>STATION 02</StationBadge>
             <h1 className="mt-6 tracking-tight">
-              <span className="block text-4xl md:text-6xl font-normal leading-none text-white">CAPTURE</span>
-              <span className="block text-4xl md:text-6xl font-extrabold leading-none text-[#FF6B35]">PHOTOS</span>
+              <span className="block text-4xl md:text-6xl font-normal leading-none text-white">
+                CAPTURE
+              </span>
+              <span className="block text-4xl md:text-6xl font-extrabold leading-none text-[#FF6B35]">
+                PHOTOS
+              </span>
             </h1>
 
             <p className="mt-4 text-gray-400 flex items-center justify-center gap-3">
@@ -568,14 +635,35 @@ function CapturePhotosContent() {
                 <div className="aspect-video flex items-center justify-center bg-[rgba(0,0,0,0.3)]">
                   {photos[selectedSlot] ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={photos[selectedSlot]!} alt="Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={photos[selectedSlot]!}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <div className="flex flex-col items-center justify-center text-gray-400">
-                      <svg className="w-12 h-12 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                      <svg
+                        className="w-12 h-12 mb-3 opacity-50"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z"
+                        />
                       </svg>
-                      <span className="text-sm uppercase tracking-wider">No photo selected</span>
+                      <span className="text-sm uppercase tracking-wider">
+                        No photo selected
+                      </span>
                     </div>
                   )}
                 </div>
@@ -587,8 +675,18 @@ function CapturePhotosContent() {
                   onClick={() => setShowCamera(true)}
                   className="flex-1 flex items-center justify-center gap-3 py-4 bg-[#00CED1] text-white rounded-full font-medium hover:bg-[#00b8ba] transition shadow-[0_0_20px_rgba(0,206,209,0.3)]"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
+                    />
                   </svg>
                   Open Camera
                 </button>
@@ -596,8 +694,18 @@ function CapturePhotosContent() {
                   onClick={() => fileInputRef.current?.click()}
                   className="flex-1 flex items-center justify-center gap-3 py-4 bg-transparent border border-[#00CED1] text-[#00CED1] rounded-full font-medium hover:bg-[rgba(0,206,209,0.1)] transition"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    />
                   </svg>
                   Upload Photos
                 </button>
@@ -618,8 +726,18 @@ function CapturePhotosContent() {
                   className="w-full py-4 bg-[#FF6B35] text-white rounded-full font-medium hover:bg-[#e55a2b] transition shadow-[0_0_25px_rgba(255,107,53,0.3)] flex items-center justify-center gap-3"
                 >
                   Proceed to Gallery
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
                   </svg>
                 </button>
               )}
@@ -656,15 +774,19 @@ function CapturePhotosContent() {
           onClose={() => setShowCamera(false)}
         />
       )}
-
-
     </div>
   );
 }
 
 export default function CapturePhotos() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center text-white">Loading Station...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#0d1b2a] flex items-center justify-center text-white">
+          Loading Station...
+        </div>
+      }
+    >
       <CapturePhotosContent />
     </Suspense>
   );
