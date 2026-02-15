@@ -2,7 +2,14 @@
 import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import BokehBackground from '@/components/ui/BokehBackground';
-
+import Sidebar from '@/components/ui/sidebar';
+import StationNavbar from '@/components/ui/StationNavbar';
+import StatusBottomBar from '@/components/ui/StatusBottomBar';
+import ARCanvas from '@/components/ar/ARCanvas';
+import { useFaceMesh } from '@/lib/ar/hooks/useFaceMesh';
+import { useARState } from '@/lib/ar/hooks/useARState';
+import { AR_PROPS } from '@/public/ar-props';
+import { renderDebugLandmarks } from '@/public/ar-props/debug/faceLandmarks';
 
 const LAYOUT_CONFIGS: Record<string, { size: number; columns: number; title: string }> = {
   '1': { size: 4, columns: 2, title: 'SUBWAY 1' },
@@ -37,10 +44,35 @@ function CameraCapture({
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const arCanvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [showARMenu, setShowARMenu] = useState(false);
+
+  // AR State
+  const {
+    isEnabled: isAREnabled,
+    selectedProp,
+    customColors,
+    setIsEnabled: setAREnabled,
+    setSelectedProp,
+    setIsModelLoaded,
+    setFaceDetected,
+  } = useARState();
+
+  // Face Detection
+  const { predictions, isLoading, faceDetected } = useFaceMesh(
+    videoRef.current,
+    isAREnabled
+  );
+
+  // Update AR state
+  useEffect(() => {
+    setIsModelLoaded(!isLoading);
+    setFaceDetected(faceDetected);
+  }, [isLoading, faceDetected, setIsModelLoaded, setFaceDetected]);
 
   const handleVideoReady = useCallback(() => {
     setIsStreaming(true);
@@ -80,15 +112,29 @@ function CameraCapture({
       canvas.height = video.videoHeight * scale;
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // Flip horizontally
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height); // Draw scaled
-        // Reduce JPEG quality to 0.7 for storage safety
-        const imageData = canvas.toDataURL('image/jpeg', 0.7);
+        ctx.drawImage(video, 0, 0);
+
+        // Draw AR props if enabled
+        if (isAREnabled && selectedProp && predictions.length > 0 && arCanvasRef.current) {
+          const arCanvas = arCanvasRef.current;
+          const arCtx = arCanvas.getContext('2d');
+          if (arCtx) {
+            // Reset transform for AR overlay
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+            // Draw AR canvas content
+            ctx.drawImage(arCanvas, 0, 0);
+          }
+        }
+
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
         onCapture(imageData);
       }
     }
-  }, [onCapture]);
+  }, [onCapture, isAREnabled, selectedProp, predictions]);
 
   useEffect(() => {
     let mounted = true;
@@ -186,6 +232,106 @@ function CameraCapture({
                 className="w-full h-full object-cover"
                 style={{ transform: 'scaleX(-1)' }}
               />
+
+              {/* AR Canvas Overlay */}
+              {isAREnabled && (
+                <>
+                  <ARCanvas
+                    ref={arCanvasRef}
+                    videoRef={videoRef}
+                    predictions={predictions}
+                    selectedProp={selectedProp}
+                    propScale={1.5} // Auto-scale modifier if needed, or rely on internal logic
+                    customColors={customColors}
+                    mirrored={true}
+                  />
+                </>
+              )}
+
+              {/* AR Status Indicator */}
+              {isAREnabled && (
+                <div className="absolute top-4 left-4 space-y-2">
+                  {faceDetected && (
+                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2">
+                      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                      Face Detected
+                    </div>
+                  )}
+                  {!faceDetected && !isLoading && (
+                    <div className="bg-yellow-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+                      ⚠ No Face
+                    </div>
+                  )}
+                  {isLoading && (
+                    <div className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      ⏳ Loading...
+                    </div>
+                  )}
+                </div>
+              )}
+
+
+              {/* AR Menu Dropdown - Repositioned to bottom right of video */}
+              {showARMenu && (
+                <div className="absolute bottom-4 right-4 z-20 w-64 bg-[rgba(13,27,42,0.98)] border border-[rgba(0,206,209,0.3)] rounded-lg p-3 shadow-xl backdrop-blur-xl">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-3 pb-3 border-b border-[rgba(0,206,209,0.2)]">
+                    <span className="text-xs font-semibold text-white uppercase">AR Effects</span>
+                    <button
+                      onClick={() => setShowARMenu(false)}
+                      className="text-xs text-gray-400 hover:text-white"
+                    >
+                      CLOSE
+                    </button>
+                  </div>
+
+                  {/* Props Grid */}
+                  <div className="grid grid-cols-3 gap-2 mb-2">
+                    {/* None */}
+                    <button
+                      onClick={() => {
+                        setSelectedProp(null);
+                        setAREnabled(false); // Explicitly disable AR when None is selected
+                        setShowARMenu(false); // Optional: auto-close
+                      }}
+                      className={`aspect-square rounded border-2 transition flex items-center justify-center text-lg ${!selectedProp
+                        ? 'border-[#FF6B35] bg-[rgba(255,107,53,0.1)]'
+                        : 'border-[rgba(0,206,209,0.3)] hover:border-[#00CED1]'
+                        }`}
+                      title="No Effect"
+                    >
+                      🚫
+                    </button>
+
+                    {/* Props */}
+                    {AR_PROPS.map(prop => (
+                      <button
+                        key={prop.id}
+                        onClick={() => {
+                          setSelectedProp(prop);
+                          setAREnabled(true); // Auto-enable AR
+                          // setShowARMenu(false); // Keep open to let user try different ones
+                        }}
+                        className={`aspect-square rounded border-2 transition flex items-center justify-center text-lg ${selectedProp?.id === prop.id
+                          ? 'border-[#FF6B35] bg-[rgba(255,107,53,0.1)]'
+                          : 'border-[rgba(0,206,209,0.3)] hover:border-[#00CED1]'
+                          }`}
+                        title={prop.name}
+                      >
+                        {prop.category === 'sunglasses' && '🕶️'}
+                        {prop.category === 'hats' && prop.id === 'robot-helmet' && '🤖'}
+                        {prop.category === 'hats' && prop.id !== 'robot-helmet' && '🧢'}
+                        {prop.category === 'components' && prop.id.includes('resistor') && '🔌'}
+                        {prop.category === 'components' && prop.id.includes('servo') && '⚙️'}
+                        {prop.category === 'effects' && prop.id.includes('binary') && '🔢'}
+                        {prop.category === 'effects' && prop.id.includes('cloud') && '☁️'}
+                        {prop.category === 'effects' && prop.id.includes('debug') && '✨'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {countdown !== null && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                   <span className="text-9xl font-bold text-[#00CED1] animate-pulse">{countdown}</span>
@@ -204,12 +350,28 @@ function CameraCapture({
           >
             {countdown !== null ? 'Taking Photo...' : 'Take Photo (3s timer)'}
           </button>
+
           <button
             onClick={capturePhoto}
             disabled={!isStreaming}
             className="px-8 py-3 bg-[#FF6B35] text-white rounded-full font-medium hover:bg-[#e55a2b] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Instant Capture
+          </button>
+
+          {/* New AR Effects Button */}
+          <button
+            onClick={() => setShowARMenu(!showARMenu)}
+            disabled={!isStreaming}
+            className={`px-6 py-3 rounded-full font-medium transition flex items-center gap-2 ${showARMenu || (isAREnabled && selectedProp)
+              ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]'
+              : 'bg-[rgba(255,255,255,0.1)] text-white hover:bg-[rgba(255,255,255,0.2)]'
+              }`}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+            Effects
           </button>
         </div>
 
