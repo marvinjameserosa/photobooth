@@ -2,16 +2,9 @@
 
 import React, { useState } from "react";
 import BokehBackground from "@/components/ui/BokehBackground";
-import Sidebar from "@/components/ui/sidebar";
-import StationNavbar from "@/components/ui/StationNavbar";
-import StatusBottomBar from "@/components/ui/StatusBottomBar";
+
 import { useRouter } from "next/navigation";
 
-type Station = {
-	id: number;
-	title: string;
-	subtitle: string;
-};
 
 type TapeVariant = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -24,13 +17,6 @@ type PhotoCard = {
 	badge: string;
 	caption: string;
 };
-
-const journeySteps: Station[] = [
-	{ id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT" },
-	{ id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS" },
-	{ id: 3, title: "STATION 03", subtitle: "PHOTO GALLERY" },
-	{ id: 4, title: "STATION 04", subtitle: "SHARE RESULTS" },
-];
 
 const tapePlacement: Record<TapeVariant, string> = {
 	"top-left": "-rotate-[4deg]",
@@ -135,12 +121,7 @@ export default function SubwayGallery() {
 	return (
 		<div className="min-h-screen flex text-gray-100">
 			<BokehBackground />
-			<StationNavbar />
 
-			<Sidebar
-				stations={journeySteps}
-				activeStationId={3}
-			/>
 
 			<main className="relative flex-1 px-6 py-10 pt-24 sm:px-10 lg:px-16 overflow-hidden">
 				<div className="relative z-10 max-w-6xl mx-auto">
@@ -203,7 +184,7 @@ export default function SubwayGallery() {
 			</main>
 
 			{/* Mobile Bottom Bar */}
-			<StatusBottomBar stations={journeySteps} activeStationId={3} />
+
 		</div>
 	);
 }

@@ -2,9 +2,7 @@
 import React from "react";
 import Image from "next/image";
 import BokehBackground from '@/components/ui/BokehBackground';
-import Sidebar from '@/components/ui/sidebar';
-import StationNavbar from '@/components/ui/StationNavbar';
-import StatusBottomBar from '@/components/ui/StatusBottomBar';
+
 import { useRouter } from 'next/navigation';
 
 type Station = {
@@ -20,12 +18,7 @@ const stations: Station[] = [
   { id: 4, title: "TRANSIT TERMINAL", subtitle: "Route Maps" },
 ];
 
-const journeySteps: Station[] = [
-  { id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT" },
-  { id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS" },
-  { id: 3, title: "STATION 03", subtitle: "PHOTO GALLERY" },
-  { id: 4, title: "STATION 04", subtitle: "SHARE RESULTS" },
-];
+
 
 
 function StationBadge({ children }: { children: React.ReactNode }) {
@@ -181,13 +174,9 @@ export default function GridLayout() {
       <BokehBackground />
 
       {/* Navigation */}
-      <StationNavbar />
 
-      {/* Sidebar Component - Desktop Only */}
-      <Sidebar
-        stations={journeySteps}
-        activeStationId={1}
-      />
+
+
 
       {/* Main Content */}
       <main className="relative flex-1 p-6 md:p-12 pt-24">
@@ -220,8 +209,7 @@ export default function GridLayout() {
         </div>
       </main>
 
-      {/* Mobile Bottom Bar */}
-      <StatusBottomBar stations={journeySteps} activeStationId={1} />
+
     </div>
   );
 }

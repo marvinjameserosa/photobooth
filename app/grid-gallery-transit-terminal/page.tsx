@@ -2,14 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import Squares from "@/components/ui/bg-particles";
-import Sidebar from "@/components/ui/sidebar";
 import { DINEng } from "@/lib/fonts";
-
-type Station = {
-	id: number;
-	title: string;
-	subtitle: string;
-};
+import Image from "next/image";
 
 type TapeVariant = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
@@ -22,13 +16,6 @@ type PhotoCard = {
 	badge: string;
 	caption: string;
 };
-
-const journeySteps: Station[] = [
-	{ id: 1, title: "STATION 01", subtitle: "SELECT LAYOUT" },
-	{ id: 2, title: "STATION 02", subtitle: "CAPTURE PHOTOS" },
-	{ id: 3, title: "STATION 03", subtitle: "PHOTO GALLERY" },
-	{ id: 4, title: "STATION 04", subtitle: "SHARE RESULTS" },
-];
 
 const photos: PhotoCard[] = [
 	{
@@ -109,9 +96,11 @@ function Polaroid({ photo }: { photo: PhotoCard }) {
 				className="relative w-full max-w-xs sm:max-w-sm bg-white pb-6 pt-4 px-4 shadow-[0_28px_80px_rgba(0,0,0,0.55)] border border-neutral-200"
 				style={{ transform: `rotate(${photo.rotation}deg)` }}
 			>
-				<img
+				<Image
 					src="/photo-gallery/WASHI TAPE.png"
 					alt=""
+					width={160}
+					height={45}
 					className={`absolute top-0 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 w-36 sm:w-40 pointer-events-none select-none drop-shadow-[0_14px_36px_rgba(0,0,0,0.45)] ${tapePlacement[photo.tape]}`}
 					aria-hidden
 				/>
@@ -121,10 +110,11 @@ function Polaroid({ photo }: { photo: PhotoCard }) {
 							<span className="absolute top-3 right-3 z-10 border border-yellow-300/80 bg-black/85 text-yellow-300 text-[10px] font-semibold px-2 py-1 tracking-[0.3em] uppercase">
 								{photo.badge}
 							</span>
-							<img
-								src={photo.src}
+							<Image
+								src={photo.src!}
 								alt={photo.alt}
-								className="h-full w-full object-cover"
+								fill
+								className="object-cover"
 							/>
 						</div>
 					</>
@@ -188,14 +178,6 @@ export default function SubwayGallery() {
 				</button>
 			)}
 
-			<Sidebar
-				stations={journeySteps}
-				activeStationId={3}
-				isOpen={isSidebarOpen}
-				isDesktop={isDesktop}
-				onToggle={() => setIsSidebarOpen((v) => !v)}
-				onClose={() => setIsSidebarOpen(false)}
-			/>
 
 			<main className="relative flex-1 px-6 py-10 sm:px-10 lg:px-16 overflow-hidden">
 				{!isDesktop && isSidebarOpen && (
@@ -226,7 +208,7 @@ export default function SubwayGallery() {
 							<span className="text-sky-400 text-4xl sm:text-5xl lg:text-6xl"></span>
 						</h1>
 						<p
-							className="mt-2 text-sm sm:text-base text-gray-400 tracking-[0.10em]"
+							className="mt-2 text-sm sm:text-base text-gray-400 tracking-widest"
 							style={{ fontFamily: "TT Firs Neue Trial Var Roman, sans-serif" }}
 						>
 							Review your captured moments before final departure
@@ -235,7 +217,7 @@ export default function SubwayGallery() {
 
 					<section className="mt-12">
 						<div className="relative bg-[#121212] border border-neutral-800/70 px-5 py-8 sm:px-12 sm:py-12 shadow-[0_50px_120px_rgba(0,0,0,0.65)]">
-							<div className="absolute inset-x-10 -top-3 h-px bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent" />
+							<div className="absolute inset-x-10 -top-3 h-px bg-linear-to-r from-transparent via-yellow-400/60 to-transparent" />
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
 								{photos.map((photo) => (
 									<Polaroid key={photo.id} photo={photo} />
@@ -246,17 +228,21 @@ export default function SubwayGallery() {
 
 					<div className="mt-12 flex flex-col sm:flex-row sm:items-center sm:justify-center gap-4 sm:gap-6">
 						<button className="flex items-center justify-center gap-4 border border-neutral-700 bg-neutral-900/80 px-10 py-5 text-xs font-semibold uppercase tracking-[0.32em] text-gray-100 shadow-[0_18px_40px_rgba(0,0,0,0.45)] hover:border-neutral-500 hover:bg-neutral-900 transition">
-							<img
+							<Image
 								src="/photo-gallery/BACK TO CAPTURE ICON.png"
 								alt="Back to capture"
+								width={16}
+								height={16}
 								className="h-4 w-4"
 							/>
 							BACK TO CAPTURE
 						</button>
 						<button className="flex items-center justify-center gap-4 bg-red-600 px-10 py-5 text-xs font-semibold uppercase tracking-[0.32em] text-white shadow-[0_20px_45px_rgba(220,38,38,0.45)] hover:bg-red-500 transition">
-							<img
+							<Image
 								src="/photo-gallery/PROCEED TO RESULTS ICON.png"
 								alt="Proceed to results"
+								width={16}
+								height={16}
 								className="h-4 w-4"
 							/>
 							PROCEED TO RESULTS
